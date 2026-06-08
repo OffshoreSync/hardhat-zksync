@@ -151,9 +151,10 @@ export async function getLatestRelease(
     const url = `https://github.com/${owner}/${repo}/releases/latest`;
     const redirectUrlPattern = `https://github.com/${owner}/${repo}/releases/tag/v`;
 
-    const { request, interceptors } = await import('undici');
+    const { request, getGlobalDispatcher, interceptors } = await import('undici');
 
-    const dispatcher = interceptors.redirect({ maxRedirections: 0 });
+    const dispatcher: Dispatcher = getGlobalDispatcher()
+        .compose(interceptors.redirect({ maxRedirections: 0 }));
     const response = await request(url, {
         dispatcher,
         headersTimeout: timeout,

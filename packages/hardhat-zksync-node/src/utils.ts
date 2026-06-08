@@ -314,8 +314,9 @@ export async function getLatestRelease(owner: string, repo: string, userAgent: s
 export async function getAllTags(owner: string, repo: string, userAgent: string, timeout: number): Promise<any> {
     const finalUrl = await handleRedirect(`https://api.github.com/repos/${owner}/${repo}/tags`, userAgent, timeout);
 
-    const { request, interceptors } = await import('undici');
-    const dispatcher = interceptors.redirect({ maxRedirections: 0 });
+    const { request, getGlobalDispatcher, interceptors } = await import('undici');
+    const dispatcher: Dispatcher = getGlobalDispatcher()
+        .compose(interceptors.redirect({ maxRedirections: 0 }));
     const response = await request(finalUrl, {
         dispatcher,
         headersTimeout: timeout,
@@ -333,12 +334,13 @@ export async function getAllTags(owner: string, repo: string, userAgent: string,
 }
 
 async function handleRedirect(url: string, userAgent: string, timeout: number): Promise<string> {
-    const { request, interceptors } = await import('undici');
+    const { request, getGlobalDispatcher, interceptors } = await import('undici');
 
     let currentUrl = url;
 
     while (true) {
-        const dispatcher = interceptors.redirect({ maxRedirections: 0 });
+        const dispatcher: Dispatcher = getGlobalDispatcher()
+            .compose(interceptors.redirect({ maxRedirections: 0 }));
         const response = await request(currentUrl, {
             dispatcher,
             headersTimeout: timeout,
